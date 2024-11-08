@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>六爻排盘系统</title>
+    <style>
+        /* 定义本地字体 */
+        @font-face {
+            font-family: 'LocalFont';
+            src: local('SimSun'),             /* 首选宋体 */
+                 local('Songti SC'),          /* macOS 宋体 */
+                 local('Noto Serif SC'),      /* 备选思源宋体 */
+                 local('Microsoft YaHei'),    /* 备选雅黑 */
+                 local('PingFang SC'),        /* 备选苹方 */
+                 local('Heiti SC'),           /* 备选黑体 */
+                 local('Arial');              /* 最后备选 */
+            font-display: swap;               /* 字体加载策略 */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'LocalFont', serif;  /* 使用本地字体 */
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .input-section {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .input-group input {
+            padding: 12px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .input-hint {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+
+        .input-error {
+            color: #d32f2f;
+            margin-top: 5px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .input-group input:invalid + .input-error {
+            display: block;
+        }
+
+        .generate-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .hexagram-display {
+            margin: 20px auto;
+            max-width: 1200px;
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .hexagram-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .hexagram-section h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.4em;
+        }
+
+        .hexagram-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin: 10px 0;
+        }
+
+        .hexagram-table th {
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 2px solid #eee;
+        }
+
+        .hexagram-table td {
+            padding: 12px 8px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .hexagram-table tr:hover td {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .yao-symbol {
+            font-family: monospace;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .yang .yao-symbol {
+            color: #d32f2f;
+        }
+
+        .yin .yao-symbol {
+            color: #1976d2;
+        }
+
+        .auxiliary-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px auto;
+            max-width: 1000px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .auxiliary-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .five-elements-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .elements-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .element {
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+            color: white;
+        }
+
+        .element-relations {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .time-info {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .time-info span {
+            padding: 4px 8px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .hexagram-table td:last-child {
+            font-weight: bold;
+        }
+
+        .hexagram-table td:last-child:not(:empty) {
+            color: #d32f2f;
+        }
+
+        .hexagram-display::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .hexagram-display::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .hexagram-display::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .hexagram-display::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .input-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hexagram-section {
+                min-width: 280px;
+            }
+
+            .hexagram-table {
+                font-size: 0.9em;
+            }
+
+            .hexagram-table th,
+            .hexagram-table td {
+                padding: 8px 4px;
+            }
+
+            .hexagram-display::after {
+                content: '← 滑动查看更多 →';
+                position: absolute;
+                bottom: -20px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 0.8em;
+                color: #666;
+                white-space: nowrap;
+                animation: fadeInOut 2s infinite;
+            }
+
+            .time-info {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .time-info span {
+                font-size: 0.9em;
+                padding: 3px 6px;
+            }
+
+            .elements-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 5px;
+            }
+
+            .element {
+                font-size: 0.9em;
+                padding: 8px 5px;
+            }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @media (hover: none) {
+            .hexagram-table tr:active td {
+                background: #f0f0f0;
+                transform: translateY(-1px);
+            }
+
+            .generate-button:active {
+                background-color: #3d8b40;
+                transform: translateY(1px);
+            }
+        }
+
+        .input-group input {
+            font-size: 16px;
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .loading {
+            position: relative;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden-spirit,
+        .flying-spirit {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .hidden-spirit {
+            color: #2196F3;
+        }
+
+        .flying-spirit {
+            color: #FF5722;
+        }
+
+        @media screen and (max-width: 768px) {
+            .hexagram-table th:nth-child(7),
+            .hexagram-table td:nth-child(7),
+            .hexagram-table th:nth-child(8),
+            .hexagram-table td:nth-child(8) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>六爻排盘</h1>
+            <p>输入六次占卜阳面的个数（0-3），系统将自动生成六爻卦象和详细解读</p>
+        </header>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="yao-input">输入六次阳面数（每位0-3）</label>
+                <input 
+                    type="text" 
+                    id="yao-input" 
+                    maxlength="6" 
+                    placeholder="如：231012"
+                    pattern="[0-3]{6}"
+                >
+                <div class="input-hint">请按从下到上顺序输入6个数字，每位数字范围0-3</div>
+            </div>
+            <button class="generate-button" onclick="generateHexagram()">生成卦象</button>
+        </div>
+
+        <div id="hexagram-display" class="hexagram-display"></div>
+        <div id="auxiliary-info" class="auxiliary-info"></div>
+    </div>
+
+    <script>
+        // 六十四卦数据
+        const HEXAGRAM_MAP = {
+            '111111': { 
+                name: '乾为天', 
+                nature: '刚健中正',
+                description: '大哉乾元，万物资始，乃统天。'
+            },
+            '000000': { 
+                name: '坤为地', 
+                nature: '柔顺中正',
+                description: '至哉坤元，万物资生，乃顺承天。'
+            },
+            // ... 可以继续添加其他卦象
+        };
+
+        // 计算爻值和变爻
+        function calculateYao(coinCount) {
+            const valueMap = {
+                0: { value: 0, changing: true },    // 老阴
+                1: { value: 1, changing: true },    // 老阳
+                2: { value: 0, changing: false },   // 少阴
+                3: { value: 1, changing: false }    // 少阳
+            };
+            return valueMap[coinCount];
+        }
+
+        // 计算卦象名称
+        function getHexagramName(yaoArray) {
+            const key = yaoArray.map(yao => yao.value).join('');
+            return HEXAGRAM_MAP[key]?.name || '未知卦象';
+        }
+
+        // 生成卦象
+        function generateHexagram() {
+            const input = document.getElementById('yao-input').value;
+            
+            // 验证输入
+            if (!/^[0-3]{6}$/.test(input)) {
+                alert('请输入6位数字，每位数字范围为0-3');
+                return;
+            }
+
+            // 将输入字符串转换为数组
+            const inputs = input.split('').map(Number);
+            
+            // 计算主卦
+            const mainYao = inputs.map(count => calculateYao(count));
+            const changedYao = mainYao.map(yao => ({
+                ...yao,
+                value: yao.changing ? (yao.value === 1 ? 0 : 1) : yao.value,
+                changing: false
+            }));
+
+            // 显示卦象
+            displayHexagram(mainYao, changedYao);
+            // 显示五行关系
+            displayFiveElements();
+        }
+
+        // 显示卦象
+        function displayHexagram(mainYao, changedYao) {
+            const hexagramDisplay = document.getElementById('hexagram-display');
+            let html = '';
+            
+            // 创建主卦表格
+            html += createHexagramTable(mainYao, '主卦');
+
+            // 如果有变爻，创建变卦表格
+            if (mainYao.some(yao => yao.changing)) {
+                html += createHexagramTable(changedYao, '变卦');
+            }
+
+            hexagramDisplay.innerHTML = html;
+        }
+
+        // 创建卦象表格
+        function createHexagramTable(yaoArray, title) {
+            const hexagramName = getHexagramName(yaoArray);
+            const selfElement = 'metal';
+            const timeInfo = getCurrentTimeInfo();
+            const dayBranch = timeInfo.dayPillar.charAt(1); // 获取日支
+            
+            let tableHtml = `
+                <div class="hexagram-section">
+                    <h3>${title} - ${hexagramName}</h3>
+                    <div class="time-info">
+                        <span>太岁：${timeInfo.yearPillar}</span>
+                        <span>月建：${timeInfo.monthPillar}</span>
+                        <span>日辰：${timeInfo.dayPillar}</span>
+                        <span>旬空：${timeInfo.emptyBranches.join('、')}</span>
+                    </div>
+                    <table class="hexagram-table">
+                        <thead>
+                            <tr>
+                                <th>爻位</th>
+                                <th>爻象</th>
+                                <th>地支</th>
+                                <th>五行</th>
+                                <th>六亲</th>
+                                <th>神煞</th>
+                                <th>伏神</th>
+                                <th>飞神</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            for (let i = 5; i >= 0; i--) {
+                const yao = yaoArray[i];
+                const earthBranch = calculateEarthBranch(i);
+                const element = calculateElement(earthBranch);
+                const sixRelatives = calculateSixRelatives(selfElement, element);
+                const sixBeasts = calculateSixBeasts(i);
+                const elementColor = getElementColor(element);
+                const isVoid = timeInfo.emptyBranches.includes(earthBranch);
+                const hiddenSpirits = calculateHiddenSpirit(earthBranch);
+                const flyingSpirit = calculateFlyingSpirit(earthBranch, dayBranch);
+
+                // 构建状态信息
+                const status = [];
+                if (isVoid) status.push('空');
+                if (yao.changing) status.push('动');
+                
+                tableHtml += `
+                    <tr class="${yao.value === 1 ? 'yang' : 'yin'}" 
+                        style="background-color: ${elementColor}10">
+                        <td>${i + 1}</td>
+                        <td class="yao-symbol">${yao.value === 1 ? '━━━━━' : '━━ ━━'}</td>
+                        <td>${earthBranch}</td>
+                        <td style="color: ${elementColor}">${FIVE_ELEMENTS_CN[element]}</td>
+                        <td>${sixRelatives}</td>
+                        <td>${sixBeasts}</td>
+                        <td class="hidden-spirit">${hiddenSpirits.join('、')}</td>
+                        <td class="flying-spirit">${flyingSpirit}</td>
+                        <td>${status.join('、') || '－'}</td>
+                    </tr>
+                `;
+            }
+
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return tableHtml;
+        }
+
+        // 五行和地支的对应关系
+        const BRANCH_ELEMENTS = {
+            '子': 'water', '丑': 'earth', '寅': 'wood',
+            '卯': 'wood',  '辰': 'earth', '巳': 'fire',
+            '午': 'fire',  '未': 'earth', '申': 'metal',
+            '酉': 'metal', '戌': 'earth', '亥': 'water'
+        };
+
+        // 五行生克关系
+        const FIVE_ELEMENTS_RELATIONS = {
+            metal: { generates: 'water', restricts: 'wood' },
+            water: { generates: 'wood', restricts: 'fire' },
+            wood: { generates: 'fire', restricts: 'earth' },
+            fire: { generates: 'earth', restricts: 'metal' },
+            earth: { generates: 'metal', restricts: 'water' }
+        };
+
+        // 计算地支
+        function calculateEarthBranch(position) {
+            const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+            return branches[position % 12];
+        }
+
+        // 计算五行属性
+        function calculateElement(earthBranch) {
+            return BRANCH_ELEMENTS[earthBranch];
+        }
+
+        // 计算六亲关系
+        function calculateSixRelatives(selfElement, targetElement) {
+            if (selfElement === targetElement) return '兄弟';
+            if (FIVE_ELEMENTS_RELATIONS[selfElement].generates === targetElement) return '子孙';
+            if (FIVE_ELEMENTS_RELATIONS[targetElement].generates === selfElement) return '父母';
+            if (FIVE_ELEMENTS_RELATIONS[selfElement].restricts === targetElement) return '官鬼';
+            return '妻财';
+        }
+
+        // 计算神煞
+        function calculateSixBeasts(position) {
+            const beasts = ['青龙', '朱雀', '勾陈', '腾蛇', '白虎', '玄武'];
+            return beasts[position % 6];
+        }
+
+        // 获取五行颜色
+        function getElementColor(element) {
+            const colors = {
+                metal: '#BEC2CB',
+                wood: '#4CAF50',
+                water: '#2196F3',
+                fire: '#F44336',
+                earth: '#795548'
+            };
+            return colors[element] || '#000000';
+        }
+
+        // 更新五行名称为中文
+        const FIVE_ELEMENTS_CN = {
+            metal: '金',
+            wood: '木',
+            water: '水',
+            fire: '火',
+            earth: '土'
+        };
+
+        // 添加时间信息计算
+        function getCurrentTimeInfo() {
+            // 这里可以接入农历转换库，暂时使用模拟数据
+            return {
+                yearPillar: '甲辰',  // 太岁
+                monthPillar: '丙寅', // 月建
+                dayPillar: '戊午',   // 日辰
+                hourPillar: '壬申',  // 时辰
+                emptyBranches: ['戌', '亥'] // 旬空
+            };
+        }
+
+        // 更新五行显示
+        function displayFiveElements() {
+            const auxiliaryInfo = document.getElementById('auxiliary-info');
+            auxiliaryInfo.innerHTML = `
+                <div class="five-elements-section">
+                    <h3>五行生克关系</h3>
+                    <div class="elements-grid">
+                        ${Object.keys(FIVE_ELEMENTS_RELATIONS).map(element => `
+                            <div class="element" style="background-color: ${getElementColor(element)}">
+                                ${FIVE_ELEMENTS_CN[element]}
+                                <div class="element-relations">
+                                    生${FIVE_ELEMENTS_CN[FIVE_ELEMENTS_RELATIONS[element].generates]}
+                                    克${FIVE_ELEMENTS_CN[FIVE_ELEMENTS_RELATIONS[element].restricts]}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 添加输入验证
+        document.getElementById('yao-input').addEventListener('input', function(e) {
+            let value = e.target.value;
+            
+            // 只允许输入0-3的数字
+            value = value.replace(/[^0-3]/g, '');
+            
+            // 限制长度为6位
+            if (value.length > 6) {
+                value = value.slice(0, 6);
+            }
+            
+            e.target.value = value;
+        });
+
+        // 计算伏神飞神
+        function calculateHiddenSpirit(earthBranch) {
+            const hiddenMap = {
+                '子': ['癸'],
+                '丑': ['己', '辛', '癸'],
+                '寅': ['甲', '丙', '戊'],
+                '卯': ['乙'],
+                '辰': ['戊', '乙', '癸'],
+                '巳': ['丙', '戊', '庚'],
+                '午': ['丁', '己'],
+                '未': ['己', '丁', '乙'],
+                '申': ['庚', '壬', '戊'],
+                '酉': ['辛'],
+                '戌': ['戊', '辛', '丁'],
+                '亥': ['壬', '甲']
+            };
+            return hiddenMap[earthBranch] || [];
+        }
+
+        // 计算飞神
+        function calculateFlyingSpirit(earthBranch, dayBranch) {
+            const branchIndex = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'].indexOf(earthBranch);
+            const dayIndex = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'].indexOf(dayBranch);
+            const diff = (branchIndex - dayIndex + 12) % 12;
+            return diff === 0 ? '日干' : `${diff}位`;
+        }
+    </script>
+</body>
+</html> 
